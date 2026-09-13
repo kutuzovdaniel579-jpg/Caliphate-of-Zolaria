@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Political Parties | ISZ</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="icon" href="https://cdn.discordapp.com/icons/1520834495488725123/a_9dea66992e5a734691d56c7d2cc1da34.webp?size=64" type="image/webp" />
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ISZ DIRECTORY</p>
+      <h2>Political Parties</h2>
+      <p class="intro">Explore the parties shaping the political landscape.</p>
+    </header>
+
+    <section id="party-list" class="party-grid" aria-live="polite">
+      <p class="status">Loading political parties...</p>
+    </section>
+  </main>
+
+  <script>
+    const partyList = document.querySelector('#party-list');
+
+    function showMessage(message, isError = false) {
+      partyList.innerHTML = `<p class="status${isError ? ' error' : ''}">${message}</p>`;
+    }
+
+    function partyCard(party) {
+      const card = document.createElement('article');
+      card.className = 'party-card';
+      card.innerHTML = `
+        <div class="party-mark">${String(party.name || '?').charAt(0).toUpperCase()}</div>
+        <div class="party-content">
+          <div class="party-title-row">
+            <h3></h3>
+            <span class="members"><i class="fa-solid fa-users"></i> <span></span></span>
+          </div>
+          <p class="bio"></p>
+        </div>`;
+      card.querySelector('h3').textContent = party.name || 'Unnamed party';
+      card.querySelector('.members span').textContent = `${party.members || 0} members`;
+      card.querySelector('.bio').textContent = party.bio || 'No biography available.';
+      return card;
+    }
+
+    async function loadParties() {
+      try {
+        // pjp/index.json should contain an array such as ["bcf.json", "another-party.json"].
+        const manifestResponse = await fetch('pjp/index.json');
+        if (!manifestResponse.ok) throw new Error('The pjp/index.json file could not be found.');
+        const manifest = await manifestResponse.json();
+        const files = Array.isArray(manifest) ? manifest : manifest.files;
+        if (!Array.isArray(files)) throw new Error('pjp/index.json must contain a files array.');
+
+        const parties = await Promise.all(files.map(async (entry) => {
+          const file = typeof entry === 'string' ? entry : entry.file;
+          const response = await fetch(`pjp/${file}`);
+          if (!response.ok) throw new Error(`Could not load ${file}.`);
+          return response.json();
+        }));
+
+        partyList.replaceChildren(...parties.map(partyCard));
+        if (!parties.length) showMessage('No political parties have been added yet.');
+      } catch (error) {
+        showMessage(error.message, true);
+      }
+    }
+
+    loadParties();
+  </script>
+</body>
+</html>
