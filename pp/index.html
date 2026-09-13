@@ -28,11 +28,33 @@
       partyList.innerHTML = `<p class="status${isError ? ' error' : ''}">${message}</p>`;
     }
 
+    function emptyPartyCard(message = 'No political parties found.') {
+      const card = document.createElement('article');
+      card.className = 'party-card empty-party-card';
+      card.innerHTML = `
+        <div class="party-placeholder" aria-hidden="true">
+          <i class="fa-regular fa-folder-open"></i>
+        </div>
+        <div class="party-content">
+          <h3>No parties available</h3>
+          <p class="bio"></p>
+        </div>`;
+      card.querySelector('.bio').textContent = message;
+      return card;
+    }
+
+    function showEmptyPartyPlaceholder(message = 'No political parties found.') {
+      partyList.replaceChildren(emptyPartyCard(message));
+    }
+
     function partyCard(party) {
       const card = document.createElement('article');
       card.className = 'party-card';
+      const image = party.image
+        ? `<img class="party-image" src="${party.image}" alt="${party.name || 'Political party'} logo" loading="lazy">`
+        : `<div class="party-placeholder" aria-label="No party logo available"><i class="fa-regular fa-image"></i></div>`;
       card.innerHTML = `
-        <div class="party-mark">${String(party.name || '?').charAt(0).toUpperCase()}</div>
+        ${image}
         <div class="party-content">
           <div class="party-title-row">
             <h3></h3>
@@ -62,10 +84,14 @@
           return response.json();
         }));
 
+        if (!parties.length) {
+          showEmptyPartyPlaceholder('Add party JSON files to pjp/index.json to display them here.');
+          return;
+        }
+
         partyList.replaceChildren(...parties.map(partyCard));
-        if (!parties.length) showMessage('No political parties have been added yet.');
       } catch (error) {
-        showMessage(error.message, true);
+        showEmptyPartyPlaceholder('Party data could not be found. Add pjp/index.json and try again.');
       }
     }
 
