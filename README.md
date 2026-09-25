@@ -1,4 +1,4 @@
-# Welcome to The Caliphate of Zolaria!
+# Welcome to zolarian.online!
 
 ### What is The CoZ?
 The CoZ or Caliphate of Zolaria is an Discord server containing different topics.
