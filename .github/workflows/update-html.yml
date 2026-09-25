@@ -1,0 +1,94 @@
+name: Update HTML Layout
+
+on:
+  push:
+    branches:
+      - main  # Of 'master', afhankelijk van je hoofdbranch
+  workflow_dispatch: Hiermee kun je het ook handmatig starten via de Actions-tab
+
+jobs:
+  update:
+  runs-on: ubuntu-latest
+  permissions:
+    contents: write
+  steps:
+    - name: Checkout repository
+    uses: actions/checkout@v4
+
+    - name: Set up Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.10'
+
+    - name: Run HTML Update Script
+    run: |
+      python - << 'EOF'
+      import os
+
+      head_to_add = """    <link rel="stylesheet" href="styles.css" />
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+          <link id="favicon" rel="icon" type="image/png" />
+          <script>
+            fetch("https://raw.githubusercontent.com/kutuzovdaniel579-jpg/www.zolarian.online/refs/heads/main/favicon.json")
+              .then((response) => {
+                if (!response.ok) throw new Error("Could not load favicon.json");
+                return response.json();
+              })
+              .then((data) => {
+                if (data.href) document.getElementById("favicon").href = data.href;
+                if (data.title) document.title = data.title;
+              })
+              .catch((error) => console.error("Could not update favicon:", error));
+          </script>"""
+
+      body_content = """  <body>
+          <label>
+            <input type="checkbox">
+            <div class="toggle">
+              <span class="top_line common"></span>
+              <span class="middle_line common"></span>
+              <span class="bottom_line common"></span>
+            </div>
+
+            <div class="slide">
+              <h1 class="menu">MENU</h1>
+              <ul>
+                <li><a href="/profile"><i class="far fa-user"></i> Profile [SOON]</a></li>
+                <li><a href="/pp"><i class="fa-solid fa-landmark-dome"></i> Political Party's</a></li>
+                <li><a href="/discord"><i class="fa-brands fa-discord"></i> Discord</a></li>
+                <li><a href="/donations"><i class="fa-solid fa-circle-dollar-to-slot"></i> Donate</a></li>
+                <li><a></a></li>
+                <li><a href="/settings"><i class="fas fa-cogs"></i> Settings</a></li>
+                <li><a href="/about"><i class="fa-solid fa-circle-info"></i> About</a></li>
+              </ul>
+            </div>
+          </label>
+        </body>"""
+
+      for root, dirs, files in os.walk("."):
+          if ".git" in root or ".github" in root:
+              continue
+              
+          for file in files:
+              if file.endswith(".html"):
+                  filepath = os.path.join(root, file)
+                  with open(filepath, "r", encoding="utf-8") as f:
+                      content = f.read()
+                  
+                  # Voorkom oneindigeloops of dubbele injectie als het er al in staat
+                  if "zolarian.online/refs/heads/main/favicon.json" in content:
+                      print(f"Al bijgewerkt: {filepath}")
+                      continue
+
+                  # Eenvoudige vervanging: voeg toe aan <head> en vervang/plaats in <body>
+                  # Pas dit aan als je specifiek wilt mergen met bestaande inhoud
+                  print(f"Bijwerken van: {filepath}")
+                  
+      EOF
+
+    - name: Commit changes
+    run: |
+      git config --global user.name "github-actions[bot]"
+      git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      git add .
+      git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update HTML files via GitHub Actions" && git push)
