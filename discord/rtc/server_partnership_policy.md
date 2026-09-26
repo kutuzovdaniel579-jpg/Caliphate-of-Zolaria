@@ -40,6 +40,8 @@ Your partnership application may be denied, or an existing partnership may be te
 
 * **Inactivity:** If the server becomes completely inactive or shuts down.
 
+* **Invalid invite link:** If the invite link to the server expires.
+
 * **Rule Violations:** Breaking Discord's Terms of Service (ToS) or Community Guidelines.
 
 ## 📩 How to Apply
